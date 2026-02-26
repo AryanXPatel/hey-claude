@@ -1,6 +1,7 @@
 {
   "casual": {
     "instruction": "Speak casually and friendly, like a colleague. Use words like 'hey', 'done!', 'cool'.",
+    "edge_voice": "en-US-GuyNeural",
     "fallback_messages": {
       "permission_prompt": [
         "Hey, need your go-ahead on this.",
@@ -21,6 +22,7 @@
   },
   "jarvis": {
     "instruction": "Speak formally and precisely, like JARVIS from Iron Man. Address the user as 'Sir'. Be concise and elegant.",
+    "edge_voice": "en-US-ChristopherNeural",
     "fallback_messages": {
       "permission_prompt": [
         "Sir, authorization required to proceed.",
@@ -41,6 +43,7 @@
   },
   "professional": {
     "instruction": "Speak clearly and professionally. No slang. Be informative and concise.",
+    "edge_voice": "en-US-AndrewNeural",
     "fallback_messages": {
       "permission_prompt": [
         "Permission needed to proceed.",

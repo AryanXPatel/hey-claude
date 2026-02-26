@@ -1,7 +1,10 @@
 {
   "personality": "jarvis",
+  "engine": "edge-tts",
   "volume": 100,
   "rate": 2,
   "muted": false,
-  "voice": null
+  "voice": null,
+  "edge_voice": "en-US-ChristopherNeural",
+  "edge_rate": "+10%"
 }
