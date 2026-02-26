@@ -1,0 +1,13 @@
+{
+  "name": "hey-claude",
+  "version": "1.0.0",
+  "description": "Give Claude Code a voice — your AI agent talks to you with context-aware speech notifications",
+  "author": {
+    "name": "Aryan Patel",
+    "github": "AryanXPatel"
+  },
+  "homepage": "https://github.com/AryanXPatel/hey-claude",
+  "repository": "https://github.com/AryanXPatel/hey-claude",
+  "license": "MIT",
+  "keywords": ["voice", "tts", "notification", "accessibility", "speech", "ai-agent"]
+}

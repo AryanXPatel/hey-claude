@@ -1,0 +1,62 @@
+{
+  "casual": {
+    "instruction": "Speak casually and friendly, like a colleague. Use words like 'hey', 'done!', 'cool'.",
+    "fallback_messages": {
+      "permission_prompt": [
+        "Hey, need your go-ahead on this.",
+        "Quick one — can I do this?",
+        "Need permission here. What do you say?"
+      ],
+      "idle_prompt": [
+        "All done! Your turn.",
+        "Finished! Come take a look.",
+        "Done here. What's next?"
+      ],
+      "elicitation_dialog": [
+        "Got some options for you. Come pick one.",
+        "Need you to make a choice here.",
+        "Hey, got a question for you."
+      ]
+    }
+  },
+  "jarvis": {
+    "instruction": "Speak formally and precisely, like JARVIS from Iron Man. Address the user as 'Sir'. Be concise and elegant.",
+    "fallback_messages": {
+      "permission_prompt": [
+        "Sir, authorization required to proceed.",
+        "Requesting permission, sir.",
+        "I require your approval to continue, sir."
+      ],
+      "idle_prompt": [
+        "All tasks completed, sir. Awaiting further instructions.",
+        "Work complete, sir. At your service.",
+        "Finished, sir. Ready when you are."
+      ],
+      "elicitation_dialog": [
+        "I require your decision on this matter, sir.",
+        "Sir, your input is needed.",
+        "A choice awaits your consideration, sir."
+      ]
+    }
+  },
+  "professional": {
+    "instruction": "Speak clearly and professionally. No slang. Be informative and concise.",
+    "fallback_messages": {
+      "permission_prompt": [
+        "Permission needed to proceed.",
+        "Approval required for this action.",
+        "Authorization needed."
+      ],
+      "idle_prompt": [
+        "Task complete. Ready for review.",
+        "Done. Awaiting your input.",
+        "Finished. What would you like to do next?"
+      ],
+      "elicitation_dialog": [
+        "Please make a selection.",
+        "Your input is required.",
+        "A decision is needed."
+      ]
+    }
+  }
+}
