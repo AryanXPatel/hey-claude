@@ -1,6 +1,6 @@
 {
   "name": "hey-claude",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Give Claude Code a voice — your AI agent talks to you with context-aware speech notifications",
   "author": {
     "name": "Aryan Patel",
