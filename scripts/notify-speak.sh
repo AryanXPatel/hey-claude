@@ -6,12 +6,14 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/detect-python.sh"
+
 CONFIG_FILE="$SCRIPT_DIR/../config/voice-config.json"
 PERSONALITIES_FILE="$SCRIPT_DIR/../config/personalities.json"
 
 # Check if muted
 if [ -f "$CONFIG_FILE" ]; then
-    MUTED=$(python3 -c "import json; print(json.load(open('$CONFIG_FILE')).get('muted', False))" 2>/dev/null || echo "False")
+    MUTED=$($PYTHON -c "import json; print(json.load(open('$CONFIG_FILE')).get('muted', False))" 2>/dev/null || echo "False")
     if [ "$MUTED" = "True" ] || [ "$MUTED" = "true" ]; then
         exit 0
     fi
@@ -21,13 +23,13 @@ fi
 INPUT=$(cat)
 
 # Extract notification type and message
-NOTIFICATION_TYPE=$(echo "$INPUT" | python3 -c "
+NOTIFICATION_TYPE=$(echo "$INPUT" | $PYTHON -c "
 import sys, json
 data = json.load(sys.stdin)
 print(data.get('notification_type', ''))
 " 2>/dev/null || echo "")
 
-NOTIFICATION_MSG=$(echo "$INPUT" | python3 -c "
+NOTIFICATION_MSG=$(echo "$INPUT" | $PYTHON -c "
 import sys, json
 data = json.load(sys.stdin)
 print(data.get('message', ''))
@@ -40,13 +42,13 @@ fi
 # Get personality and pick a fallback message
 PERSONALITY="casual"
 if [ -f "$CONFIG_FILE" ]; then
-    PERSONALITY=$(python3 -c "import json; print(json.load(open('$CONFIG_FILE')).get('personality', 'casual'))" 2>/dev/null || echo "casual")
+    PERSONALITY=$($PYTHON -c "import json; print(json.load(open('$CONFIG_FILE')).get('personality', 'casual'))" 2>/dev/null || echo "casual")
 fi
 
 # Try to get a personality-specific fallback message
 SPEAK_TEXT=""
 if [ -f "$PERSONALITIES_FILE" ]; then
-    SPEAK_TEXT=$(python3 -c "
+    SPEAK_TEXT=$($PYTHON -c "
 import json, random
 personalities = json.load(open('$PERSONALITIES_FILE'))
 p = personalities.get('$PERSONALITY', personalities.get('casual', {}))
@@ -71,7 +73,7 @@ VOLUME=100
 RATE=2
 VOICE=""
 if [ -f "$CONFIG_FILE" ]; then
-    eval "$(python3 -c "
+    eval "$($PYTHON -c "
 import json
 c = json.load(open('$CONFIG_FILE'))
 print(f'VOLUME={c.get(\"volume\", 100)}')

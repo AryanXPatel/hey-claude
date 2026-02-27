@@ -17,22 +17,22 @@ if [ -z "$MESSAGE" ]; then
 fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/detect-python.sh"
 
 # If no engine passed, try to read from config
 if [ "$ENGINE" = "builtin" ] && [ -f "$SCRIPT_DIR/../config/voice-config.json" ]; then
-    CONFIG_ENGINE=$(python3 -c "import json; print(json.load(open('$SCRIPT_DIR/../config/voice-config.json')).get('engine', 'builtin'))" 2>/dev/null || echo "builtin")
+    CONFIG_ENGINE=$($PYTHON -c "import json; print(json.load(open('$SCRIPT_DIR/../config/voice-config.json')).get('engine', 'builtin'))" 2>/dev/null || echo "builtin")
     if [ "$CONFIG_ENGINE" = "edge-tts" ]; then
         ENGINE="edge-tts"
-        EDGE_VOICE=$(python3 -c "import json; print(json.load(open('$SCRIPT_DIR/../config/voice-config.json')).get('edge_voice', 'en-US-ChristopherNeural'))" 2>/dev/null || echo "en-US-ChristopherNeural")
-        EDGE_RATE=$(python3 -c "import json; print(json.load(open('$SCRIPT_DIR/../config/voice-config.json')).get('edge_rate', '+10%'))" 2>/dev/null || echo "+10%")
+        EDGE_VOICE=$($PYTHON -c "import json; print(json.load(open('$SCRIPT_DIR/../config/voice-config.json')).get('edge_voice', 'en-US-ChristopherNeural'))" 2>/dev/null || echo "en-US-ChristopherNeural")
+        EDGE_RATE=$($PYTHON -c "import json; print(json.load(open('$SCRIPT_DIR/../config/voice-config.json')).get('edge_rate', '+10%'))" 2>/dev/null || echo "+10%")
     fi
 fi
 
 # Route to the right engine
 if [ "$ENGINE" = "edge-tts" ]; then
     # Use edge-tts (Microsoft neural voices)
-    python3 "$SCRIPT_DIR/speak-edge.py" "$MESSAGE" "$EDGE_VOICE" "$EDGE_RATE" "$VOLUME" 2>/dev/null \
-        || python "$SCRIPT_DIR/speak-edge.py" "$MESSAGE" "$EDGE_VOICE" "$EDGE_RATE" "$VOLUME" 2>/dev/null \
+    $PYTHON "$SCRIPT_DIR/speak-edge.py" "$MESSAGE" "$EDGE_VOICE" "$EDGE_RATE" "$VOLUME" 2>/dev/null \
         || {
             # Fallback to built-in if edge-tts fails
             echo "hey-claude: edge-tts failed, falling back to built-in TTS" >&2

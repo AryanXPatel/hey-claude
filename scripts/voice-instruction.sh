@@ -6,17 +6,19 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/detect-python.sh"
+
 CONFIG_DIR="$SCRIPT_DIR/../config"
 CONFIG_FILE="$CONFIG_DIR/voice-config.json"
 PERSONALITIES_FILE="$CONFIG_DIR/personalities.json"
 
 # Check if muted
 if [ -f "$CONFIG_FILE" ]; then
-    MUTED=$(cat "$CONFIG_FILE" | python3 -c "import sys,json; print(json.load(sys.stdin).get('muted', False))" 2>/dev/null || echo "False")
+    MUTED=$(cat "$CONFIG_FILE" | $PYTHON -c "import sys,json; print(json.load(sys.stdin).get('muted', False))" 2>/dev/null || echo "False")
     if [ "$MUTED" = "True" ] || [ "$MUTED" = "true" ]; then
         exit 0
     fi
-    PERSONALITY=$(cat "$CONFIG_FILE" | python3 -c "import sys,json; print(json.load(sys.stdin).get('personality', 'casual'))" 2>/dev/null || echo "casual")
+    PERSONALITY=$(cat "$CONFIG_FILE" | $PYTHON -c "import sys,json; print(json.load(sys.stdin).get('personality', 'casual'))" 2>/dev/null || echo "casual")
 else
     PERSONALITY="casual"
 fi
@@ -24,7 +26,7 @@ fi
 # Get personality style instruction
 STYLE=""
 if [ -f "$PERSONALITIES_FILE" ]; then
-    STYLE=$(cat "$PERSONALITIES_FILE" | python3 -c "
+    STYLE=$(cat "$PERSONALITIES_FILE" | $PYTHON -c "
 import sys, json
 data = json.load(sys.stdin)
 p = data.get('$PERSONALITY', data.get('casual', {}))

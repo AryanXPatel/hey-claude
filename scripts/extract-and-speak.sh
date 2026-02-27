@@ -5,11 +5,13 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/detect-python.sh"
+
 CONFIG_FILE="$SCRIPT_DIR/../config/voice-config.json"
 
 # Check if muted
 if [ -f "$CONFIG_FILE" ]; then
-    MUTED=$(python3 -c "import json; print(json.load(open('$CONFIG_FILE')).get('muted', False))" 2>/dev/null || echo "False")
+    MUTED=$($PYTHON -c "import json; print(json.load(open('$CONFIG_FILE')).get('muted', False))" 2>/dev/null || echo "False")
     if [ "$MUTED" = "True" ] || [ "$MUTED" = "true" ]; then
         exit 0
     fi
@@ -19,7 +21,7 @@ fi
 INPUT=$(cat)
 
 # Extract transcript path from hook input JSON
-TRANSCRIPT_PATH=$(echo "$INPUT" | python3 -c "
+TRANSCRIPT_PATH=$(echo "$INPUT" | $PYTHON -c "
 import sys, json
 data = json.load(sys.stdin)
 print(data.get('transcript_path', ''))
@@ -31,7 +33,7 @@ fi
 
 # Read the last few lines of the transcript (JSONL format) and look for <voice> tags
 # We search the last 5 lines in case there are tool calls mixed in
-VOICE_TEXT=$(tail -20 "$TRANSCRIPT_PATH" | python3 -c "
+VOICE_TEXT=$(tail -20 "$TRANSCRIPT_PATH" | $PYTHON -c "
 import sys, re, json
 
 voice_text = ''
@@ -94,7 +96,7 @@ VOLUME=100
 RATE=2
 VOICE=""
 if [ -f "$CONFIG_FILE" ]; then
-    eval "$(python3 -c "
+    eval "$($PYTHON -c "
 import json
 c = json.load(open('$CONFIG_FILE'))
 print(f'VOLUME={c.get(\"volume\", 100)}')
