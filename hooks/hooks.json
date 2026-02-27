@@ -2,11 +2,12 @@
   "hooks": {
     "SessionStart": [
       {
+        "matcher": "startup|resume|clear|compact",
         "hooks": [
           {
             "type": "command",
-            "command": "bash hooks/../scripts/voice-instruction.sh",
-            "timeout": 5
+            "command": "'${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.cmd' session-start",
+            "async": false
           }
         ]
       }
@@ -16,7 +17,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash hooks/../scripts/extract-and-speak.sh",
+            "command": "'${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.cmd' extract-and-speak",
             "timeout": 15,
             "async": true
           }
@@ -29,7 +30,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash hooks/../scripts/notify-speak.sh",
+            "command": "'${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.cmd' notify-speak",
             "timeout": 10,
             "async": true
           }

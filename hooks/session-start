@@ -1,0 +1,81 @@
+#!/usr/bin/env bash
+# session-start — SessionStart hook for hey-claude
+# Outputs JSON with additionalContext so Claude Code reliably injects
+# the voice instruction into the conversation context.
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
+PLUGIN_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+
+source "$PLUGIN_ROOT/scripts/detect-python.sh"
+
+CONFIG_FILE="$PLUGIN_ROOT/config/voice-config.json"
+PERSONALITIES_FILE="$PLUGIN_ROOT/config/personalities.json"
+
+# Check if muted — if so, skip entirely
+if [ -f "$CONFIG_FILE" ]; then
+    MUTED=$(cat "$CONFIG_FILE" | $PYTHON -c "import sys,json; print(json.load(sys.stdin).get('muted', False))" 2>/dev/null || echo "False")
+    if [ "$MUTED" = "True" ] || [ "$MUTED" = "true" ]; then
+        exit 0
+    fi
+    PERSONALITY=$(cat "$CONFIG_FILE" | $PYTHON -c "import sys,json; print(json.load(sys.stdin).get('personality', 'casual'))" 2>/dev/null || echo "casual")
+else
+    PERSONALITY="casual"
+fi
+
+# Get personality style instruction
+STYLE=""
+if [ -f "$PERSONALITIES_FILE" ]; then
+    STYLE=$(cat "$PERSONALITIES_FILE" | $PYTHON -c "
+import sys, json
+data = json.load(sys.stdin)
+p = data.get('$PERSONALITY', data.get('casual', {}))
+print(p.get('instruction', ''))
+" 2>/dev/null || echo "")
+fi
+
+# Build the voice instruction text
+VOICE_INSTRUCTION="VOICE NOTIFICATION SYSTEM ACTIVE (hey-claude plugin):
+When you finish significant work, encounter errors, need user input, or want to notify the user of something important, include a <voice> tag in your response with a brief spoken message.
+
+Format: <voice>your short message here</voice>
+
+Rules:
+- Maximum 15 words
+- Speak naturally as if talking to the user
+- Be specific about what you did or what you need
+- Style: ${STYLE:-Speak casually and friendly.}
+- Include at most ONE <voice> tag per response
+- Only include when there is something meaningful to say
+
+Examples:
+- <voice>Refactored the auth module. Changed 3 files. Your turn.</voice>
+- <voice>Hit a type error in dashboard. Need your eyes on this.</voice>
+- <voice>Got two approaches for the API. Come pick one.</voice>"
+
+# Escape string for JSON embedding
+escape_for_json() {
+    local s="$1"
+    s="${s//\\/\\\\}"
+    s="${s//\"/\\\"}"
+    s="${s//$'\n'/\\n}"
+    s="${s//$'\r'/\\r}"
+    s="${s//$'\t'/\\t}"
+    printf '%s' "$s"
+}
+
+ESCAPED=$(escape_for_json "$VOICE_INSTRUCTION")
+
+# Output proper JSON — Claude Code reads hookSpecificOutput.additionalContext
+cat <<EOF
+{
+  "additional_context": "${ESCAPED}",
+  "hookSpecificOutput": {
+    "hookEventName": "SessionStart",
+    "additionalContext": "${ESCAPED}"
+  }
+}
+EOF
+
+exit 0

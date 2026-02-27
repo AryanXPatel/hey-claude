@@ -1,0 +1,105 @@
+#!/usr/bin/env bash
+# extract-and-speak — Stop hook (async)
+# Reads the transcript, extracts the last <voice> tag, and speaks it.
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
+PLUGIN_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+
+source "$PLUGIN_ROOT/scripts/detect-python.sh"
+
+CONFIG_FILE="$PLUGIN_ROOT/config/voice-config.json"
+
+# Check if muted
+if [ -f "$CONFIG_FILE" ]; then
+    MUTED=$(cat "$CONFIG_FILE" | $PYTHON -c "import sys,json; print(json.load(sys.stdin).get('muted', False))" 2>/dev/null || echo "False")
+    if [ "$MUTED" = "True" ] || [ "$MUTED" = "true" ]; then
+        exit 0
+    fi
+fi
+
+# Read hook input from stdin
+INPUT=$(cat)
+
+# Extract transcript path from hook input JSON
+TRANSCRIPT_PATH=$(echo "$INPUT" | $PYTHON -c "
+import sys, json
+data = json.load(sys.stdin)
+print(data.get('transcript_path', ''))
+" 2>/dev/null || echo "")
+
+if [ -z "$TRANSCRIPT_PATH" ] || [ ! -f "$TRANSCRIPT_PATH" ]; then
+    exit 0
+fi
+
+# Read the last few lines of the transcript (JSONL format) and look for <voice> tags
+VOICE_TEXT=$(tail -20 "$TRANSCRIPT_PATH" | $PYTHON -c "
+import sys, re, json
+
+voice_text = ''
+for line in sys.stdin:
+    line = line.strip()
+    if not line:
+        continue
+    try:
+        entry = json.loads(line)
+        content = ''
+        if isinstance(entry, dict):
+            content = entry.get('content', '')
+            if isinstance(content, list):
+                for block in content:
+                    if isinstance(block, dict):
+                        text = block.get('text', '')
+                        if text:
+                            content = text
+                            break
+                else:
+                    content = str(content)
+            msg = entry.get('message', '')
+            if isinstance(msg, dict):
+                msg = msg.get('content', '')
+            if isinstance(msg, list):
+                for block in msg:
+                    if isinstance(block, dict):
+                        text = block.get('text', '')
+                        if text:
+                            msg = text
+                            break
+            content = str(content) + ' ' + str(msg)
+        matches = re.findall(r'<voice>(.*?)</voice>', str(content), re.DOTALL)
+        if matches:
+            voice_text = matches[-1].strip()
+    except (json.JSONDecodeError, KeyError, TypeError):
+        matches = re.findall(r'<voice>(.*?)</voice>', line, re.DOTALL)
+        if matches:
+            voice_text = matches[-1].strip()
+
+if voice_text:
+    words = voice_text.split()
+    if len(words) > 20:
+        voice_text = ' '.join(words[:20])
+    print(voice_text)
+" 2>/dev/null || echo "")
+
+if [ -z "$VOICE_TEXT" ]; then
+    exit 0
+fi
+
+# Read config for volume, rate, voice
+VOLUME=100
+RATE=2
+VOICE=""
+if [ -f "$CONFIG_FILE" ]; then
+    eval "$(cat "$CONFIG_FILE" | $PYTHON -c "
+import sys, json
+c = json.load(sys.stdin)
+print(f'VOLUME={c.get(\"volume\", 100)}')
+print(f'RATE={c.get(\"rate\", 2)}')
+v = c.get('voice', '') or ''
+print(f'VOICE={v}')
+" 2>/dev/null || echo "")"
+fi
+
+# Speak it
+bash "$PLUGIN_ROOT/scripts/speak.sh" "$VOICE_TEXT" "$VOLUME" "$RATE" "$VOICE"
